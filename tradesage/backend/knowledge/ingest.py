@@ -518,9 +518,29 @@ def ingest_mentor_node(driver: Driver) -> None:
     logger.info("Mentor node created/confirmed.")
 
 
-def ingest_pdf(driver: Driver, pdf_path: str) -> int:
+_SQLITE_DB = Path(__file__).parent.parent.parent / "tradesage.db"
+
+
+def _ensure_book_chunks_table() -> None:
+    """Create book_chunks table in SQLite if it doesn't exist."""
+    import sqlite3
+    con = sqlite3.connect(str(_SQLITE_DB))
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS book_chunks (
+            chunk_id   TEXT PRIMARY KEY,
+            book_title TEXT NOT NULL,
+            page_num   INTEGER,
+            content    TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now'))
+        )
+    """)
+    con.commit()
+    con.close()
+
+
+def ingest_pdf(driver: Optional[Driver], pdf_path: str) -> int:
     """
-    Ingest a PDF from uploads/ into BookChunk nodes.
+    Ingest a PDF into SQLite book_chunks (always) and Neo4j (if available).
     Returns the number of chunks ingested.
     """
     try:
@@ -538,42 +558,57 @@ def ingest_pdf(driver: Driver, pdf_path: str) -> int:
     book_title = path.stem.replace("_", " ").replace("-", " ").title()
     chunks_created = 0
 
-    with driver.session() as session:
-        for page_num, page in enumerate(doc):
-            text = page.get_text("text").strip()
-            if not text or len(text) < 100:
-                continue
+    # Always store in SQLite
+    import sqlite3 as _sqlite3
+    _ensure_book_chunks_table()
+    con = _sqlite3.connect(str(_SQLITE_DB))
 
-            # Split into ~500-char chunks
-            chunk_size = 500
-            for i in range(0, len(text), chunk_size):
-                chunk_text = text[i:i + chunk_size]
-                chunk_id = hashlib.sha256(
-                    f"{book_title}-{page_num}-{i}".encode()
-                ).hexdigest()[:16]
+    for page_num, page in enumerate(doc):
+        text = page.get_text("text").strip()
+        if not text or len(text) < 100:
+            continue
 
-                session.run(
-                    """
-                    MERGE (bc:BookChunk {chunk_id: $chunk_id})
-                    SET bc.book_title = $title,
-                        bc.author = $author,
-                        bc.chapter = $chapter,
-                        bc.content = $content,
-                        bc.page_num = $page_num
-                    """,
-                    {
-                        "chunk_id": chunk_id,
-                        "title": book_title,
-                        "author": "Unknown",
-                        "chapter": f"Page {page_num + 1}",
-                        "content": chunk_text,
-                        "page_num": page_num + 1,
-                    }
-                )
-                chunks_created += 1
+        chunk_size = 500
+        for i in range(0, len(text), chunk_size):
+            chunk_text = text[i:i + chunk_size]
+            chunk_id = hashlib.sha256(
+                f"{book_title}-{page_num}-{i}".encode()
+            ).hexdigest()[:16]
 
+            con.execute(
+                "INSERT OR REPLACE INTO book_chunks (chunk_id, book_title, page_num, content) VALUES (?,?,?,?)",
+                (chunk_id, book_title, page_num + 1, chunk_text),
+            )
+
+            # Also store in Neo4j if available
+            if driver:
+                try:
+                    with driver.session() as session:
+                        session.run(
+                            """
+                            MERGE (bc:BookChunk {chunk_id: $chunk_id})
+                            SET bc.book_title = $title,
+                                bc.chapter = $chapter,
+                                bc.content = $content,
+                                bc.page_num = $page_num
+                            """,
+                            {
+                                "chunk_id": chunk_id,
+                                "title": book_title,
+                                "chapter": f"Page {page_num + 1}",
+                                "content": chunk_text,
+                                "page_num": page_num + 1,
+                            }
+                        )
+                except Exception as neo4j_err:
+                    logger.debug("Neo4j chunk write skipped: %s", neo4j_err)
+
+            chunks_created += 1
+
+    con.commit()
+    con.close()
     doc.close()
-    logger.info("Ingested PDF '%s': %d chunks created.", book_title, chunks_created)
+    logger.info("Ingested PDF '%s': %d chunks saved to SQLite.", book_title, chunks_created)
     return chunks_created
 
 

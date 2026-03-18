@@ -835,10 +835,8 @@ async def upload_book(file: UploadFile = File(...)):
     with open(dest, "wb") as f:
         f.write(content)
 
-    # Ingest in background
-    chunks = 0
-    if app_state.neo4j_driver:
-        chunks = await asyncio.to_thread(ingest_pdf, app_state.neo4j_driver, str(dest))
+    # Ingest into SQLite (always) and Neo4j (if available)
+    chunks = await asyncio.to_thread(ingest_pdf, app_state.neo4j_driver, str(dest))
 
     return {
         "status": "uploaded",
