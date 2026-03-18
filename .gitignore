@@ -37,5 +37,9 @@ tradesage/frontend/dist/
 .DS_Store
 Thumbs.db
 
+# Claude Code session files
+CLAUDE.md
+**/CLAUDE.md
+
 # Model snapshots (large)
 tradesage_models/
