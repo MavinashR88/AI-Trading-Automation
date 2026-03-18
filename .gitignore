@@ -1,0 +1,41 @@
+# Database
+*.db
+*.db-wal
+*.db-shm
+
+# Environment & secrets
+.env
+*.env.local
+tradesage/.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+/tmp/
+
+# Node
+tradesage/frontend/node_modules/
+tradesage/frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model snapshots (large)
+tradesage_models/

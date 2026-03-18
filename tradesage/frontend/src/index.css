@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-surface text-gray-100 font-sans;
+  }
+  body {
+    @apply min-h-screen;
+    font-family: 'Inter', -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  /* Cards */
+  .card {
+    @apply bg-surface-1 rounded-xl border border-surface-3 p-4;
+  }
+  .card-sm {
+    @apply bg-surface-2 rounded-lg border border-surface-3 p-3;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-green  { @apply badge bg-accent-green/15 text-accent-green; }
+  .badge-red    { @apply badge bg-accent-red/15 text-accent-red; }
+  .badge-yellow { @apply badge bg-accent-yellow/15 text-accent-yellow; }
+  .badge-blue   { @apply badge bg-brand/15 text-brand-glow; }
+  .badge-purple { @apply badge bg-accent-purple/15 text-accent-purple; }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center gap-2 px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-150 disabled:opacity-40;
+  }
+  .btn-primary { @apply btn bg-brand hover:bg-brand-dim text-white; }
+  .btn-danger  { @apply btn bg-accent-red/80 hover:bg-accent-red text-white; }
+  .btn-ghost   { @apply btn bg-surface-3 hover:bg-surface-2 text-gray-300; }
+  .btn-sm      { @apply px-2.5 py-1.5 text-xs; }
+
+  /* Mono */
+  .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+
+  /* Section heading */
+  .section-title {
+    @apply text-xs font-semibold text-gray-500 uppercase tracking-widest;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { @apply bg-surface; }
+::-webkit-scrollbar-thumb { @apply bg-surface-3 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-gray-600; }
+
+/* Glow */
+.glow-green { box-shadow: 0 0 16px rgba(34, 197, 94, 0.2); }
+.glow-red   { box-shadow: 0 0 16px rgba(239, 68, 68, 0.2); }
+.glow-blue  { box-shadow: 0 0 16px rgba(59, 130, 246, 0.2); }
+
+/* Live dot pulse */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.85); }
+}
+.live-dot { animation: live-pulse 1.8s ease-in-out infinite; }
+
+/* Subtle fade-in for new cards */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fade-in 0.25s ease-out forwards; }
+
+/* Grade colours */
+.grade-Ap { @apply text-accent-purple font-black; }
+.grade-A  { @apply text-accent-green font-bold; }
+.grade-B  { @apply text-brand-glow font-bold; }
+.grade-C  { @apply text-accent-yellow font-bold; }
+.grade-D  { @apply text-orange-400 font-bold; }
+.grade-F  { @apply text-accent-red font-bold; }
