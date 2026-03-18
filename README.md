@@ -104,7 +104,7 @@ Every new algorithm receives **predecessor context** — the previous algorithm'
 | Metric | Requirement |
 |--------|-------------|
 | Paper trades | 50+ |
-| Win rate | 90% |
+| Win rate | 80% |
 
 Algorithms that don't graduate keep accumulating paper trades indefinitely — no auto-rejection.
 
